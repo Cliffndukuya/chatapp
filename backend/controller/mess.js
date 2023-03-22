@@ -1,7 +1,7 @@
 
 const http = require('http').Server(app);
-const io = require('socket.io')(http);
-
+//const io = require('socket.io')(http);
+const io = socketIO(server);
 
 const poolConnection = require("../database Connection/dbConn");
 const pool = poolConnection;
@@ -27,4 +27,22 @@ app.get('/messages', async (req, res) => {
     } finally {
       client.release();
     }
+  });
+
+
+  io.on('connection', (socket) => {
+    console.log('a user connected');
+  
+    socket.on('disconnect', () => {
+      console.log('user disconnected');
+    });
+  
+    socket.on('chat message', async (msg) => {
+      try {
+        await pool.query('INSERT INTO messages (name, message) VALUES ($1, $2)', [msg.name, msg.message]);
+        io.emit('chat message', msg);
+      } catch (error) {
+        console.error(error);
+      }
+    });
   });
