@@ -1,0 +1,161 @@
+Here is the complete code for each class:
+
+*Book.java*
+```
+public class Book {
+ private int id;
+ private String title;
+ private String author;
+
+ public Book(int id, String title, String author) {
+  (link unavailable) = id;
+  this.title = title;
+  this.author = author;
+ }
+
+ public int getId() {
+  return id;
+ }
+
+ public void setId(int id) {
+  (link unavailable) = id;
+ }
+
+ public String getTitle() {
+  return title;
+ }
+
+ public void setTitle(String title) {
+  this.title = title;
+ }
+
+ public String getAuthor() {
+  return author;
+ }
+
+ public void setAuthor(String author) {
+  this.author = author;
+ }
+}
+```
+
+*BookDAO.java*
+```
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+
+public class BookDAO {
+ private Connection connection;
+ private TransactionManager transactionManager;
+
+ public BookDAO(Connection connection, TransactionManager transactionManager) {
+  this.connection = connection;
+  this.transactionManager = transactionManager;
+ }
+
+ public void save(Book book) {
+  transactionManager.beginTransaction();
+  try {
+   PreparedStatement statement = connection.prepareStatement("INSERT INTO books (title, author) VALUES (?, ?)");
+   statement.setString(1, book.getTitle());
+   statement.setString(2, book.getAuthor());
+   statement.executeUpdate();
+   transactionManager.commitTransaction();
+  } catch (SQLException e) {
+   transactionManager.rollbackTransaction();
+   // handle exception
+  }
+ }
+
+ public void update(Book book) {
+  transactionManager.beginTransaction();
+  try {
+   PreparedStatement statement = connection.prepareStatement("UPDATE books SET title = ?, author = ? WHERE id = ?");
+   statement.setString(1, book.getTitle());
+   statement.setString(2, book.getAuthor());
+   statement.setInt(3, book.getId());
+   statement.executeUpdate();
+   transactionManager.commitTransaction();
+  } catch (SQLException e) {
+   transactionManager.rollbackTransaction();
+   // handle exception
+  }
+ }
+
+ public void delete(Book book) {
+  transactionManager.beginTransaction();
+  try {
+   PreparedStatement statement = connection.prepareStatement("DELETE FROM books WHERE id = ?");
+   statement.setInt(1, book.getId());
+   statement.executeUpdate();
+   transactionManager.commitTransaction();
+  } catch (SQLException e) {
+   transactionManager.rollbackTransaction();
+   // handle exception
+  }
+ }
+
+ public List<Book> getAllBooks() {
+  List<Book> books = new ArrayList<>();
+  try {
+   PreparedStatement statement = connection.prepareStatement("SELECT * FROM books");
+   ResultSet resultSet = statement.executeQuery();
+   while (resultSet.next()) {
+    Book book = new Book(
+     resultSet.getInt("id"),
+     resultSet.getString("title"),
+     resultSet.getString("author")
+    );
+    books.add(book);
+   }
+  } catch (SQLException e) {
+   // handle exception
+  }
+  return books;
+ }
+}
+```
+
+*TransactionManager.java*
+```
+import java.sql.Connection;
+import java.sql.SQLException;
+
+public class TransactionManager {
+ private Connection connection;
+
+ public TransactionManager(Connection connection) {
+  this.connection = connection;
+ }
+
+ public void beginTransaction() {
+  try {
+   connection.setAutoCommit(false);
+  } catch (SQLException e) {
+   // handle exception
+  }
+ }
+
+ public void commitTransaction() {
+  try {
+   connection.commit();
+  } catch (SQLException e) {
+   // handle exception
+  }
+ }
+
+ public void rollbackTransaction() {
+  try {
+   connection.rollback();
+  } catch (SQLException e) {
+   // handle exception
+  }
+ }
+}
+```
+
+Note that this code assumes you have a database connection established and a "books" table created with columns "id", "title", and "author". You would need to modify the code to fit your specific database schema and connection details.
